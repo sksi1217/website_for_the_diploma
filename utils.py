@@ -129,6 +129,7 @@ def csv_content_disposition(filename):
     """Заголовок Content-Disposition с поддержкой кириллицы в имени файла."""
     from urllib.parse import quote
 
-    ascii_fallback = re.sub(r"[^\w.\-]", "_", filename)
+    # filename= должен быть только ASCII (требование HTTP), иначе сервер падает
+    ascii_fallback = re.sub(r"[^A-Za-z0-9._\-]", "_", filename) or "report.csv"
     encoded = quote(filename, safe="")
     return f'attachment; filename="{ascii_fallback}"; filename*=UTF-8\'\'{encoded}'

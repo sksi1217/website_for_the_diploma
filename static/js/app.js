@@ -656,11 +656,15 @@ const Reports = {
             }
             const blob = await res.blob();
             const disp = res.headers.get('Content-Disposition') || '';
-            let filename = 'отчет.csv';
-            const utfMatch = disp.match(/filename\*=UTF-8''([^;]+)/i);
-            const plainMatch = disp.match(/filename="([^"]+)"/i);
-            if (utfMatch) filename = decodeURIComponent(utfMatch[1]);
-            else if (plainMatch) filename = plainMatch[1];
+            let filename = 'otchet.csv';
+            try {
+                const utfMatch = disp.match(/filename\*=UTF-8''([^;]+)/i);
+                const plainMatch = disp.match(/filename="([^"]+)"/i);
+                if (utfMatch) filename = decodeURIComponent(utfMatch[1]);
+                else if (plainMatch) filename = plainMatch[1];
+            } catch (_) {
+                /* оставляем имя по умолчанию */
+            }
 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -671,7 +675,7 @@ const Reports = {
             a.remove();
             URL.revokeObjectURL(url);
         } catch (e) {
-            await Alert.show('Ошибка сети при экспорте', 'Ошибка');
+            await Alert.show(e?.message || 'Не удалось скачать файл. Перезапустите сайт и попробуйте снова.', 'Ошибка');
         } finally {
             if (btn) {
                 btn.disabled = false;

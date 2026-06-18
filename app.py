@@ -430,65 +430,68 @@ def api_report_student_card():
 
 @app.route("/api/reports/export")
 def api_report_export():
-    report = request.args.get("report", "group_stat")
-    handlers = {
-        "group_stat": api_report_group_stat,
-        "subject_stat": api_report_subject_stat,
-        "excellent": api_report_excellent,
-        "failing": api_report_failing,
-        "distribution": api_report_distribution,
-        "student_card": api_report_student_card,
-    }
-    data = handlers.get(report, api_report_group_stat)().get_json()
+    try:
+        report = request.args.get("report", "group_stat")
+        handlers = {
+            "group_stat": api_report_group_stat,
+            "subject_stat": api_report_subject_stat,
+            "excellent": api_report_excellent,
+            "failing": api_report_failing,
+            "distribution": api_report_distribution,
+            "student_card": api_report_student_card,
+        }
+        data = handlers.get(report, api_report_group_stat)().get_json()
 
-    if not data.get("rows"):
-        return jsonify({"ok": False, "error": "Нет данных для экспорта"}), 400
+        if not data.get("rows"):
+            return jsonify({"ok": False, "error": "Нет данных для экспорта"}), 400
 
-    headers_map = {
-        "group_stat": ["ФИО", "№ Зачётки", "Оценок", "Ср. балл", "5", "4", "3", "2"],
-        "subject_stat": ["Предмет", "Оценок", "Ср. балл", "5", "4", "3", "2"],
-        "excellent": ["ФИО", "№ Зачётки", "Группа", "Ср. балл", "Оценок"],
-        "failing": ["ФИО", "№ Зачётки", "Группа", "Долгов"],
-        "distribution": ["Оценка", "Словесно", "Количество", "Процент"],
-        "student_card": ["Предмет", "Оценка", "Тип", "Дата", "Семестр", "Преподаватель"],
-    }
-    keys_map = {
-        "group_stat": ["name", "student_number", "grades_count", "avg", "fives", "fours", "threes", "twos"],
-        "subject_stat": ["subject_name", "total_grades", "avg", "fives", "fours", "threes", "twos"],
-        "excellent": ["name", "student_number", "group_name", "avg", "grades_count"],
-        "failing": ["name", "student_number", "group_name", "debt_count"],
-        "distribution": ["grade", "label", "count", "percent"],
-        "student_card": ["subject_name", "grade", "grade_type", "date", "semester", "teacher"],
-    }
-    decimal_keys = {"avg", "percent"}
+        headers_map = {
+            "group_stat": ["ФИО", "№ Зачётки", "Оценок", "Ср. балл", "5", "4", "3", "2"],
+            "subject_stat": ["Предмет", "Оценок", "Ср. балл", "5", "4", "3", "2"],
+            "excellent": ["ФИО", "№ Зачётки", "Группа", "Ср. балл", "Оценок"],
+            "failing": ["ФИО", "№ Зачётки", "Группа", "Долгов"],
+            "distribution": ["Оценка", "Словесно", "Количество", "Процент"],
+            "student_card": ["Предмет", "Оценка", "Тип", "Дата", "Семестр", "Преподаватель"],
+        }
+        keys_map = {
+            "group_stat": ["name", "student_number", "grades_count", "avg", "fives", "fours", "threes", "twos"],
+            "subject_stat": ["subject_name", "total_grades", "avg", "fives", "fours", "threes", "twos"],
+            "excellent": ["name", "student_number", "group_name", "avg", "grades_count"],
+            "failing": ["name", "student_number", "group_name", "debt_count"],
+            "distribution": ["grade", "label", "count", "percent"],
+            "student_card": ["subject_name", "grade", "grade_type", "date", "semester", "teacher"],
+        }
+        decimal_keys = {"avg", "percent"}
 
-    output = io.StringIO()
-    output.write("sep=;\r\n")
-    writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
-    writer.writerow(headers_map.get(report, []))
-    for row in data["rows"]:
-        cells = []
-        for k in keys_map.get(report, []):
-            val = row.get(k, "")
-            if k in decimal_keys:
-                val = format_csv_decimal(val, decimals=1 if k == "percent" else 2)
-                if k == "percent" and val:
-                    val = f"{val}%"
-            cells.append(val)
-        writer.writerow(cells)
+        output = io.StringIO()
+        output.write("sep=;\r\n")
+        writer = csv.writer(output, delimiter=";", lineterminator="\r\n")
+        writer.writerow(headers_map.get(report, []))
+        for row in data["rows"]:
+            cells = []
+            for k in keys_map.get(report, []):
+                val = row.get(k, "")
+                if k in decimal_keys:
+                    val = format_csv_decimal(val, decimals=1 if k == "percent" else 2)
+                    if k == "percent" and val:
+                        val = f"{val}%"
+                cells.append(val)
+            writer.writerow(cells)
 
-    filename = build_report_filename(
-        report,
-        db,
-        group_id=request.args.get("group_id", type=int),
-        student_id=request.args.get("student_id", type=int),
-        semester=request.args.get("semester", type=int),
-    )
-    return Response(
-        "\ufeff" + output.getvalue(),
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": csv_content_disposition(filename)}
-    )
+        filename = build_report_filename(
+            report,
+            db,
+            group_id=request.args.get("group_id", type=int),
+            student_id=request.args.get("student_id", type=int),
+            semester=request.args.get("semester", type=int),
+        )
+        return Response(
+            "\ufeff" + output.getvalue(),
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": csv_content_disposition(filename)},
+        )
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Ошибка экспорта: {e}"}), 500
 
 
 # ==================== DATA MANAGEMENT ====================
