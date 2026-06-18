@@ -11,6 +11,7 @@ from demo_data import populate_school_demo
 from utils import (
     validate_email, validate_phone, parse_date, format_date,
     format_csv_decimal, build_report_filename, csv_content_disposition,
+    encode_csv_for_excel,
 )
 
 app = Flask(__name__)
@@ -308,12 +309,6 @@ def api_report_group_stat():
     group_id = request.args.get("group_id", type=int)
     semester = request.args.get("semester", type=int)
 
-    if not group_id:
-        groups = db.get_all_groups()
-        if not groups:
-            return jsonify({"rows": [], "info": "Нет групп"})
-        group_id = groups[0]["id"]
-
     data = db.get_group_statistics(group_id, semester)
     rows = []
     total_avg = 0
@@ -325,7 +320,9 @@ def api_report_group_stat():
         count += 1
         tag = "excellent" if avg >= 4.5 else ("failing" if (row["twos"] or 0) > 0 else "")
         rows.append({
-            "name": name, "student_number": row["student_number"],
+            "name": name,
+            "group_name": row["group_name"],
+            "student_number": row["student_number"],
             "grades_count": row["grades_count"] or 0,
             "avg": f"{avg:.2f}" if avg else "—",
             "fives": row["fives"] or 0, "fours": row["fours"] or 0,
@@ -333,10 +330,13 @@ def api_report_group_stat():
             "tag": tag
         })
     avg_total = total_avg / count if count else 0
-    return jsonify({
-        "rows": rows,
-        "info": f"Студентов: {count} | Средний балл группы: {avg_total:.2f}"
-    })
+    if group_id:
+        group_name = next((g["name"] for g in db.get_all_groups() if g["id"] == group_id), "")
+        info = f"Класс: {group_name} | Студентов: {count} | Средний балл: {avg_total:.2f}"
+    else:
+        groups_count = len({r["group_name"] for r in rows})
+        info = f"Все классы ({groups_count}) | Студентов: {count} | Средний балл: {avg_total:.2f}"
+    return jsonify({"rows": rows, "info": info, "all_groups": not group_id})
 
 
 @app.route("/api/reports/subject_stat")
@@ -445,8 +445,13 @@ def api_report_export():
         if not data.get("rows"):
             return jsonify({"ok": False, "error": "Нет данных для экспорта"}), 400
 
+        all_groups = data.get("all_groups", False)
         headers_map = {
-            "group_stat": ["ФИО", "№ Зачётки", "Оценок", "Ср. балл", "5", "4", "3", "2"],
+            "group_stat": (
+                ["ФИО", "Класс", "№ Зачётки", "Оценок", "Ср. балл", "5", "4", "3", "2"]
+                if all_groups
+                else ["ФИО", "№ Зачётки", "Оценок", "Ср. балл", "5", "4", "3", "2"]
+            ),
             "subject_stat": ["Предмет", "Оценок", "Ср. балл", "5", "4", "3", "2"],
             "excellent": ["ФИО", "№ Зачётки", "Группа", "Ср. балл", "Оценок"],
             "failing": ["ФИО", "№ Зачётки", "Группа", "Долгов"],
@@ -454,7 +459,11 @@ def api_report_export():
             "student_card": ["Предмет", "Оценка", "Тип", "Дата", "Семестр", "Преподаватель"],
         }
         keys_map = {
-            "group_stat": ["name", "student_number", "grades_count", "avg", "fives", "fours", "threes", "twos"],
+            "group_stat": (
+                ["name", "group_name", "student_number", "grades_count", "avg", "fives", "fours", "threes", "twos"]
+                if all_groups
+                else ["name", "student_number", "grades_count", "avg", "fives", "fours", "threes", "twos"]
+            ),
             "subject_stat": ["subject_name", "total_grades", "avg", "fives", "fours", "threes", "twos"],
             "excellent": ["name", "student_number", "group_name", "avg", "grades_count"],
             "failing": ["name", "student_number", "group_name", "debt_count"],
@@ -486,8 +495,8 @@ def api_report_export():
             semester=request.args.get("semester", type=int),
         )
         return Response(
-            "\ufeff" + output.getvalue(),
-            mimetype="text/csv; charset=utf-8",
+            encode_csv_for_excel(output.getvalue()),
+            mimetype="text/csv; charset=windows-1251",
             headers={"Content-Disposition": csv_content_disposition(filename)},
         )
     except Exception as e:

@@ -387,12 +387,13 @@ class Database:
         """)
         return cursor.fetchall()
 
-    def get_group_statistics(self, group_id, semester=None):
+    def get_group_statistics(self, group_id=None, semester=None):
         cursor = self.connection.cursor()
         query = """
             SELECT
                 s.id, s.last_name, s.first_name, s.middle_name,
                 s.student_id as student_number,
+                gr.name as group_name,
                 COUNT(g.id) as grades_count,
                 AVG(g.grade) as avg_grade,
                 SUM(CASE WHEN g.grade = 5 THEN 1 ELSE 0 END) as fives,
@@ -400,14 +401,18 @@ class Database:
                 SUM(CASE WHEN g.grade = 3 THEN 1 ELSE 0 END) as threes,
                 SUM(CASE WHEN g.grade = 2 THEN 1 ELSE 0 END) as twos
             FROM students s
+            JOIN groups gr ON s.group_id = gr.id
             LEFT JOIN grades g ON s.id = g.student_id
-            WHERE s.group_id = ?
+            WHERE 1=1
         """
-        params = [group_id]
+        params = []
+        if group_id:
+            query += " AND s.group_id = ?"
+            params.append(group_id)
         if semester:
             query += " AND (g.semester=? OR g.semester IS NULL)"
             params.append(semester)
-        query += " GROUP BY s.id ORDER BY s.last_name"
+        query += " GROUP BY s.id ORDER BY gr.name, s.last_name, s.first_name"
         cursor.execute(query, params)
         return cursor.fetchall()
 

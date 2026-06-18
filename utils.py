@@ -77,6 +77,12 @@ def format_csv_decimal(value, decimals=2):
     return f"{num:.{decimals}f}".replace(".", ",")
 
 
+def encode_csv_for_excel(csv_text):
+    """Windows-1251: стандартная кодировка CSV для русского Excel."""
+    csv_text = csv_text.replace("—", "-").replace("–", "-")
+    return csv_text.encode("cp1251", errors="replace")
+
+
 def sanitize_filename_part(text, max_len=50):
     text = re.sub(r'[\\/:*?"<>|]+', "", str(text or "").strip())
     text = re.sub(r"\s+", "_", text)
@@ -92,10 +98,6 @@ def build_report_filename(report, db, group_id=None, student_id=None, semester=N
             if g["id"] == group_id:
                 group_name = g["name"]
                 break
-    elif report == "group_stat":
-        groups = db.get_all_groups()
-        if groups:
-            group_name = groups[0]["name"]
 
     student_part = ""
     if student_id:
@@ -104,7 +106,10 @@ def build_report_filename(report, db, group_id=None, student_id=None, semester=N
             student_part = sanitize_filename_part(f"{st['last_name']}_{st['first_name']}")
 
     if report == "group_stat":
-        parts = ["Успеваемость_группы", sanitize_filename_part(group_name)]
+        if group_id:
+            parts = ["Успеваемость_группы", sanitize_filename_part(group_name)]
+        else:
+            parts = ["Успеваемость_всех_групп"]
         if semester:
             parts.append(f"семестр_{semester}")
     elif report == "subject_stat":

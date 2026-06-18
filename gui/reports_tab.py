@@ -130,7 +130,6 @@ class ReportsTab(ttk.Frame):
             if not groups:
                 messagebox.showinfo("Информация", "Нет групп в базе данных")
                 return
-            group_id = groups[0]['id']
 
         semester = None
         if hasattr(self, 'param_semester_var') and self.param_semester_var.get() != "Все":
@@ -138,9 +137,14 @@ class ReportsTab(ttk.Frame):
 
         data = self.db.get_group_statistics(group_id, semester)
 
-        cols = ('name', 'student_number', 'count', 'avg', '5', '4', '3', '2')
-        heads = ['ФИО', '№ Зачётки', 'Оценок', 'Ср. балл', '5', '4', '3', '2']
-        widths = [200, 90, 60, 80, 40, 40, 40, 40]
+        if group_id:
+            cols = ('name', 'student_number', 'count', 'avg', '5', '4', '3', '2')
+            heads = ['ФИО', '№ Зачётки', 'Оценок', 'Ср. балл', '5', '4', '3', '2']
+            widths = [200, 90, 60, 80, 40, 40, 40, 40]
+        else:
+            cols = ('name', 'group', 'student_number', 'count', 'avg', '5', '4', '3', '2')
+            heads = ['ФИО', 'Класс', '№ Зачётки', 'Оценок', 'Ср. балл', '5', '4', '3', '2']
+            widths = [180, 60, 90, 60, 80, 40, 40, 40, 40]
         self._setup_tree(cols, heads, widths)
 
         total_avg = 0
@@ -152,18 +156,25 @@ class ReportsTab(ttk.Frame):
             count += 1
 
             tag = 'excellent' if avg >= 4.5 else ('failing' if (row['twos'] or 0) > 0 else '')
-            self.result_tree.insert('', 'end', values=(
-                name, row['student_number'], row['grades_count'] or 0,
+            values = (
+                name,
+                *([] if group_id else [row['group_name']]),
+                row['student_number'], row['grades_count'] or 0,
                 f"{avg:.2f}" if avg else "—",
                 row['fives'] or 0, row['fours'] or 0,
                 row['threes'] or 0, row['twos'] or 0
-            ), tags=(tag,))
+            )
+            self.result_tree.insert('', 'end', values=values, tags=(tag,))
 
         self.result_tree.tag_configure('excellent', foreground='#27ae60')
         self.result_tree.tag_configure('failing', foreground='#e74c3c')
 
         avg_total = total_avg / count if count else 0
-        self.info_var.set(f"Студентов: {count} | Средний балл группы: {avg_total:.2f}")
+        if group_id:
+            self.info_var.set(f"Студентов: {count} | Средний балл группы: {avg_total:.2f}")
+        else:
+            groups_count = len({row['group_name'] for row in data})
+            self.info_var.set(f"Все классы ({groups_count}) | Студентов: {count} | Средний балл: {avg_total:.2f}")
 
     def _report_subject_stat(self):
         data = self.db.get_subject_statistics()
@@ -303,7 +314,8 @@ class ReportsTab(ttk.Frame):
             return
 
         try:
-            with open(filepath, 'w', newline='', encoding='utf-8-sig') as f:
+            with open(filepath, 'w', newline='', encoding='cp1251') as f:
+                f.write('sep=;\n')
                 writer = csv.writer(f, delimiter=';')
                 cols = self.result_tree['columns']
                 headers = [self.result_tree.heading(c)['text'] for c in cols]

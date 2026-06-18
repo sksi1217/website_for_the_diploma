@@ -591,10 +591,16 @@ const Reports = {
     async generate() {
         const { report, params } = this._getParams();
         const data = await API.get(`/api/reports/${report}?${params}`);
+        const groupEl = document.getElementById('param-group');
+        const allGroups = report === 'group_stat' && (!groupEl || groupEl.value === 'Все');
         const configs = {
             group_stat: {
-                heads: ['ФИО','№ Зачётки','Оценок','Ср. балл','5','4','3','2'],
-                keys: ['name','student_number','grades_count','avg','fives','fours','threes','twos']
+                heads: allGroups
+                    ? ['ФИО', 'Класс', '№ Зачётки', 'Оценок', 'Ср. балл', '5', '4', '3', '2']
+                    : ['ФИО', '№ Зачётки', 'Оценок', 'Ср. балл', '5', '4', '3', '2'],
+                keys: allGroups
+                    ? ['name', 'group_name', 'student_number', 'grades_count', 'avg', 'fives', 'fours', 'threes', 'twos']
+                    : ['name', 'student_number', 'grades_count', 'avg', 'fives', 'fours', 'threes', 'twos']
             },
             subject_stat: {
                 heads: ['Предмет','Оценок','Ср. балл','5','4','3','2'],
