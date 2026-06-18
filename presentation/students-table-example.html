@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пример таблицы students</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0d1b2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .card {
+            background: #1b2838;
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            max-width: 920px;
+        }
+        h3 {
+            color: #7ec8e3;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            color: #e8edf2;
+        }
+        thead th {
+            background: #243447;
+            color: #a8d4f0;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #3498db;
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 7px 6px;
+            border-bottom: 1px solid #2a3f55;
+            white-space: nowrap;
+        }
+        tbody tr:nth-child(even) { background: #1e3044; }
+        tbody tr:hover { background: #253a50; }
+        .status-active { color: #2ecc71; }
+        .status-expelled { color: #e74c3c; }
+        .status-leave { color: #f39c12; }
+        .pk { color: #5dade2; }
+        .fk { color: #bb8fce; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>Таблица students — пример данных (школа)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>last_name</th>
+                    <th>first_name</th>
+                    <th>record_book</th>
+                    <th>group_id</th>
+                    <th>status</th>
+                    <th>email</th>
+                    <th>birth_date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="pk">1</td>
+                    <td>Иванов</td>
+                    <td>Артём</td>
+                    <td>5А-001</td>
+                    <td class="fk">1</td>
+                    <td class="status-active">Активный</td>
+                    <td>иванов01@school15.edu.ru</td>
+                    <td>2014-05-15</td>
+                </tr>
+                <tr>
+                    <td class="pk">2</td>
+                    <td>Петрова</td>
+                    <td>Мария</td>
+                    <td>5А-002</td>
+                    <td class="fk">1</td>
+                    <td class="status-active">Активный</td>
+                    <td>петрова02@school15.edu.ru</td>
+                    <td>2014-08-22</td>
+                </tr>
+                <tr>
+                    <td class="pk">3</td>
+                    <td>Семёнов</td>
+                    <td>Павел</td>
+                    <td>7Б-012</td>
+                    <td class="fk">3</td>
+                    <td class="status-active">Активный</td>
+                    <td>семенов12@school15.edu.ru</td>
+                    <td>2012-05-16</td>
+                </tr>
+                <tr>
+                    <td class="pk">4</td>
+                    <td>Козлова</td>
+                    <td>Ксения</td>
+                    <td>9В-008</td>
+                    <td class="fk">5</td>
+                    <td class="status-expelled">Отчислен</td>
+                    <td>козлова08@school15.edu.ru</td>
+                    <td>2010-08-07</td>
+                </tr>
+                <tr>
+                    <td class="pk">5</td>
+                    <td>Новикова</td>
+                    <td>Наталья</td>
+                    <td>11А-004</td>
+                    <td class="fk">7</td>
+                    <td class="status-leave">Академ. отпуск</td>
+                    <td>новикова04@school15.edu.ru</td>
+                    <td>2008-01-05</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+"""
+Запуск веб-версии АИС «Успеваемость студентов».
+
+    python main.py
+
+Откройте в браузере: http://localhost:5000
+"""
+
+from app import app
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

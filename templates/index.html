@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АИС «Успеваемость студентов»</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Меню -->
+    <nav class="menubar">
+        <div class="menu-item" id="menu-file">
+            Файл
+            <div class="dropdown">
+                <a href="#" data-action="manage-groups">Управление классами</a>
+                <hr>
+                <a href="#" data-action="exit">Выход</a>
+            </div>
+        </div>
+        <div class="menu-item" id="menu-data">
+            Данные
+            <div class="dropdown">
+                <a href="#" data-action="load-demo">Загрузить демо-данные</a>
+                <a href="#" data-action="clear-data">Очистить все данные</a>
+            </div>
+        </div>
+        <div class="menu-item" id="menu-help">
+            Справка
+            <div class="dropdown">
+                <a href="#" data-action="about">О программе</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Шапка -->
+    <header class="header">
+        <h1>🎓 АИС «Успеваемость студентов»</h1>
+        <span id="clock"></span>
+    </header>
+
+    <!-- Вкладки -->
+    <div class="tabs">
+        <button class="tab active" data-tab="students">👥 Студенты</button>
+        <button class="tab" data-tab="subjects">📚 Предметы</button>
+        <button class="tab" data-tab="grades">📝 Оценки</button>
+        <button class="tab" data-tab="reports">📊 Отчёты</button>
+    </div>
+
+    <!-- ==================== СТУДЕНТЫ ==================== -->
+    <div class="tab-content active" id="tab-students">
+        <div class="toolbar">
+            <button class="btn" onclick="Students.add()">➕ Добавить</button>
+            <button class="btn" onclick="Students.edit()">✏️ Редактировать</button>
+            <button class="btn" onclick="Students.remove()">🗑️ Удалить</button>
+            <button class="btn" onclick="Students.refresh()">🔄 Обновить</button>
+        </div>
+        <fieldset class="filter-box">
+            <legend>Фильтры и поиск</legend>
+            <label>Поиск: <input type="text" id="student-search"></label>
+            <label>Группа:
+                <select id="student-group-filter" onchange="Students.refresh()"><option>Все</option></select>
+            </label>
+            <label>Статус:
+                <select id="student-status-filter" onchange="Students.refresh()">
+                    <option>Все</option>
+                    <option>Активный</option>
+                    <option>Академический отпуск</option>
+                    <option>Отчислен</option>
+                    <option>Выпускник</option>
+                </select>
+            </label>
+        </fieldset>
+        <div class="table-wrap">
+            <table id="students-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th data-col="student_id">№ Зачётки</th>
+                        <th data-col="last_name">Фамилия</th>
+                        <th data-col="first_name">Имя</th>
+                        <th data-col="middle_name">Отчество</th>
+                        <th data-col="group_name">Группа</th>
+                        <th data-col="birth_date_fmt">Дата рожд.</th>
+                        <th data-col="email">Email</th>
+                        <th data-col="phone">Телефон</th>
+                        <th data-col="status">Статус</th>
+                        <th data-col="avg_grade" data-type="number">Ср. балл</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="tab-status" id="students-status">Учеников: 0</div>
+    </div>
+
+    <!-- ==================== ПРЕДМЕТЫ ==================== -->
+    <div class="tab-content" id="tab-subjects">
+        <div class="toolbar">
+            <button class="btn" onclick="Subjects.add()">➕ Добавить</button>
+            <button class="btn" onclick="Subjects.edit()">✏️ Редактировать</button>
+            <button class="btn" onclick="Subjects.remove()">🗑️ Удалить</button>
+            <button class="btn" onclick="Subjects.refresh()">🔄 Обновить</button>
+        </div>
+        <div class="table-wrap">
+            <table id="subjects-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th data-col="name">Название</th>
+                        <th data-col="short_name">Аббр.</th>
+                        <th data-col="teacher">Преподаватель</th>
+                        <th data-col="hours" data-type="number">Часы</th>
+                        <th data-col="semester" data-type="number">Семестр</th>
+                        <th data-col="course" data-type="number">Класс</th>
+                        <th data-col="subject_type">Тип</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="tab-status" id="subjects-status">Предметов: 0</div>
+    </div>
+
+    <!-- ==================== ОЦЕНКИ ==================== -->
+    <div class="tab-content" id="tab-grades">
+        <div class="toolbar">
+            <button class="btn" onclick="Grades.add()">➕ Добавить оценку</button>
+            <button class="btn" onclick="Grades.edit()">✏️ Редактировать</button>
+            <button class="btn" onclick="Grades.remove()">🗑️ Удалить</button>
+            <button class="btn" onclick="Grades.refresh()">🔄 Обновить</button>
+        </div>
+        <fieldset class="filter-box">
+            <legend>Фильтры</legend>
+            <label>Студент:
+                <select id="grade-student-filter" onchange="Grades.refresh()"><option>Все</option></select>
+            </label>
+            <label>Предмет:
+                <select id="grade-subject-filter" onchange="Grades.refresh()"><option>Все</option></select>
+            </label>
+            <label>Семестр:
+                <select id="grade-semester-filter" onchange="Grades.refresh()">
+                    <option>Все</option>
+                    <option>1</option><option>2</option><option>3</option><option>4</option>
+                    <option>5</option><option>6</option><option>7</option><option>8</option>
+                </select>
+            </label>
+        </fieldset>
+        <div class="table-wrap">
+            <table id="grades-table">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th data-col="student_name">Студент</th>
+                        <th data-col="group_name">Группа</th>
+                        <th data-col="subject_name">Предмет</th>
+                        <th data-col="grade" data-type="number">Оценка</th>
+                        <th data-col="grade_type">Тип</th>
+                        <th data-col="date_fmt">Дата</th>
+                        <th data-col="semester" data-type="number">Сем.</th>
+                        <th data-col="teacher">Преподаватель</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="tab-status" id="grades-status">Записей: 0</div>
+    </div>
+
+    <!-- ==================== ОТЧЁТЫ ==================== -->
+    <div class="tab-content" id="tab-reports">
+        <div class="reports-layout">
+            <div class="reports-left">
+                <fieldset class="filter-box">
+                    <legend>Тип отчёта</legend>
+                    <label><input type="radio" name="report-type" value="group_stat" checked onchange="Reports.updateParams()"> 📊 Успеваемость группы</label>
+                    <label><input type="radio" name="report-type" value="subject_stat" onchange="Reports.updateParams()"> 📚 Статистика по предметам</label>
+                    <label><input type="radio" name="report-type" value="excellent" onchange="Reports.updateParams()"> 🌟 Список отличников</label>
+                    <label><input type="radio" name="report-type" value="failing" onchange="Reports.updateParams()"> ⚠️ Должники</label>
+                    <label><input type="radio" name="report-type" value="distribution" onchange="Reports.updateParams()"> 📈 Распределение оценок</label>
+                    <label><input type="radio" name="report-type" value="student_card" onchange="Reports.updateParams()"> 👤 Карточка студента</label>
+                </fieldset>
+                <fieldset class="filter-box" id="report-params">
+                    <legend>Параметры</legend>
+                </fieldset>
+                <button class="btn btn-block" onclick="Reports.generate()">▶ Сформировать отчёт</button>
+                <button class="btn btn-block" id="btn-export-csv" onclick="Reports.exportCsv()">💾 Экспорт в CSV</button>
+            </div>
+            <div class="reports-right">
+                <div class="table-wrap">
+                    <table id="reports-table">
+                        <thead><tr></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="report-info" id="report-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статус-бар -->
+    <footer class="statusbar">
+        <span id="status-text">Готово</span>
+        <span id="db-info"></span>
+    </footer>
+
+    <!-- Модальное окно -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h2 id="modal-title"></h2>
+                <button class="modal-close" onclick="Modal.close()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- Диалог подтверждения -->
+    <div class="modal-overlay" id="confirm-overlay">
+        <div class="modal modal-sm">
+            <div class="modal-header"><h2 id="confirm-title">Подтверждение</h2></div>
+            <div class="modal-body" id="confirm-message"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="Confirm.no()">Нет</button>
+                <button class="btn btn-primary" onclick="Confirm.yes()">Да</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информационное окно -->
+    <div class="modal-overlay" id="alert-overlay">
+        <div class="modal modal-sm">
+            <div class="modal-header"><h2 id="alert-title">Информация</h2></div>
+            <div class="modal-body" id="alert-message"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="Alert.close()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- О программе -->
+    <div class="modal-overlay" id="about-overlay">
+        <div class="modal modal-about">
+            <div class="about-hero">
+                <div class="about-icon">🎓</div>
+                <h2>АИС «Успеваемость школьников»</h2>
+                <p class="about-version">Версия 2.0 · Веб-приложение</p>
+            </div>
+            <div class="about-body">
+                <p class="about-lead">Автоматизированная информационная система для учёта успеваемости учеников общеобразовательной школы.</p>
+                <ul class="about-features">
+                    <li><span>👥</span> Учёт учеников и классов</li>
+                    <li><span>📚</span> Справочник предметов</li>
+                    <li><span>📝</span> Журнал оценок и фильтры</li>
+                    <li><span>📊</span> Отчёты и аналитика</li>
+                    <li><span>💾</span> Экспорт в CSV</li>
+                </ul>
+                <div class="about-tech">
+                    <span>Python</span><span>Flask</span><span>SQLite</span><span>HTML/CSS/JS</span>
+                </div>
+            </div>
+            <div class="modal-footer about-footer">
+                <button class="btn btn-primary" onclick="About.close()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
